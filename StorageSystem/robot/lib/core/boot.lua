@@ -41,7 +41,7 @@ local function status(msg)
   end
 
   -- report status to paired server
-  if package.loaded.communication then
+  if package and package.loaded.communication then
     package.loaded.communication.status(msg)
   end
 
@@ -90,7 +90,6 @@ do
   -- Unclutter global namespace now that we have the package module and a filesystem
   _G.component = nil
   _G.computer = nil
-  _G.process = nil
   _G.unicode = nil
   -- Inject the package modules into the global namespace, as in Lua.
   _G.package = package
