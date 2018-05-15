@@ -1,1 +1,1 @@
-require("package").delay(fs, "/lib/core/full_filesystem.lua")
+require("package").delay(require("filesystem"), "/lib/core/full_filesystem.lua")
