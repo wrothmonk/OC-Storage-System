@@ -13,7 +13,6 @@ net.config = {
     ["protected_ports"] = {}
   }
 }
-setmetatable(net, {__index = net.modem})
 
 function net.setModem(modem)
   checkArg(1, modem, "table", "nil")
@@ -124,5 +123,7 @@ function net.send(address, port, ...)
   result = net.modem.send(address, port, table.unpack(data))
   return result
 end
+
+setmetatable(net, {__index = net.modem})
 
 return net
