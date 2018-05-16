@@ -20,7 +20,8 @@ function net.setModem(modem)
   if not config[address] then
     config[address] = {
       ["max_strength"] = math.huge,
-      ["open_ports"] = {}
+      ["open_ports"] = {},
+      ["protected_ports"] = {}
     }
   end
   config[address].max_size = net.modem.maxPacketSize()
@@ -69,7 +70,7 @@ function net.open(port, protect)
     end
     result = open(port)
   end
-  
+
   if result then
     table.insert(open_ports, port)
     if protect then
