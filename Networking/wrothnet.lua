@@ -4,13 +4,13 @@ local serialize = require("serialization").serialize
 
 local net = {
   ["modem"] = component.modem,
-  ["config"] = {
-    [net.modem.address] = {
-      ["max_size"] = net.modem.maxPacketSize(),
-      ["max_strength"] = math.huge,
-      ["open_ports"] = {},
-      ["protected_ports"] = {}
-    }
+}
+net.config = {
+  [net.modem.address] = {
+    ["max_size"] = net.modem.maxPacketSize(),
+    ["max_strength"] = math.huge,
+    ["open_ports"] = {},
+    ["protected_ports"] = {}
   }
 }
 setmetatable(net, {__index = net.modem})
