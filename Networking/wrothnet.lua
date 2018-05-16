@@ -33,15 +33,16 @@ end
 function net.close(port)
   local result = net.modem.close(port)
   if result then
-    local config, address = net.config, net.modem.address
-  if result and port then
-    for k, v in pairs(config[address].open_ports) do
-      if port == v then
-        table.remove(config[address].open_ports, k)
+    local open_ports = config[address].open_ports
+    if port then
+      for k, v in pairs(open_ports) do
+        if port == v then
+          table.remove(open_ports, k)
+        end
       end
+    else
+      open_ports = {}
     end
-  elseif result then
-    config[address].open_ports = {}
   end
   return result
 end
