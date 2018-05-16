@@ -14,6 +14,15 @@ net.config = {
   }
 }
 
+local function removeByValue(list, value)
+  for k,v in pairs(list) do
+    if v == value then
+      table.remove(list, k)
+      break
+    end
+  end
+end
+
 function net.setModem(modem)
   checkArg(1, modem, "table", "nil")
   net.modem = modem or component.modem
@@ -49,12 +58,7 @@ function net.close(port)
   if result then
     local open_ports = config[address].open_ports
     if port then
-      for k, v in pairs(open_ports) do
-        if port == v then
-          table.remove(open_ports, k)
-          break
-        end
-      end
+      removeByValue(open_ports, port)
     else
       open_ports = {}
     end
@@ -74,13 +78,14 @@ function net.open(port, protect)
       for _,v in ipairs(open_ports) do
         if not protected[v] then
           net.close(v)
+          result = open(port)
           break
         end
       end
     else
-      net.close(port)
+      removeByValue(port)
+      result = true
     end
-    result = open(port)
   end
 
   if result then
