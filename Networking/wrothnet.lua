@@ -38,6 +38,7 @@ function net.close(port)
       for k, v in pairs(open_ports) do
         if port == v then
           table.remove(open_ports, k)
+          break
         end
       end
     else
@@ -48,11 +49,14 @@ function net.close(port)
 end
 
 function net.open(port)
-  local result = net.modem.open(port)
+  local open = net.modem.open
+  local result = open(port)
+  local open_ports = net.config[net.modem.address].open_ports
   if result == nil then
-    net.close(net.config[net.modem.address].open_ports[1])
-    result = net.modem.open(port)
+    net.close(open_ports[1])
+    result = open(port)
   end
+  table.insert(open_ports, port)
   return result
 end
 
