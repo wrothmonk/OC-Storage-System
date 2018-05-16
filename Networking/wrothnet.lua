@@ -31,7 +31,6 @@ function net.setMaxStrength(strength)
 end
 
 function net.close(port)
-  checkArg(1, port, "number", "nil")
   local result = net.modem.close(port)
   if result then
     local config, address = net.config, net.modem.address
@@ -48,7 +47,6 @@ function net.close(port)
 end
 
 function net.open(port)
-  checkArg (1, port, "number")
   local result = net.modem.open(port)
   if result == nil then
     net.close(net.config[net.modem.address].open_ports[1])
@@ -57,23 +55,35 @@ function net.open(port)
   return result
 end
 
+local function verifyData(data)
+  local result = data
+  if #result > 8 then
+    error("Number of broadcast arguments after port number must be 8 or less.")
+  else
+    for k,v in pairs(result) do
+      if type(v) == "table" do
+        local compressed = serialize(v)
+        result[k] = compressed
+      end
+    end
+  end
+  return result
+end
+
 function net.broadcast(port, ...)
   local data = {...}
   local result = false
-  if #data > 8 then
-    error("Number of broadcast arguments after port number must be 8 or less.")
-  else
-    for k,v in pairs(data) do
-      if type(v) == "table" do
-        local compressed = serialize(v)
-        data[k] = compressed
-      end
-    end
-    if not net.modem.isOpen(port) then
-      net.open(port)
-    end
-    result = net.modem.broadcast(port, table.unpack(data))
-  end
+  data = verifyData(data)
+  net.open(port)
+  result = net.modem.broadcast(port, table.unpack(data))
+  return result
+end
+
+function net.send(address, port, ...)
+  local data = {...}
+  data = verifyData(data)
+  net.open(port)
+  result = net.modem.send(address, port, table.unpack(data))
   return result
 end
 
