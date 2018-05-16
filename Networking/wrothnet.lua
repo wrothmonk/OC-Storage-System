@@ -99,7 +99,7 @@ local function verifyData(data)
     error("Number of broadcast arguments after port number must be 8 or less.")
   else
     for k,v in pairs(result) do
-      if type(v) == "table" do
+      if type(v) == "table" then
         local compressed = serialize(v)
         result[k] = compressed
       end
