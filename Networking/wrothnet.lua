@@ -1,17 +1,19 @@
 local event = require("event")
 local component = require("component")
 local serialize = require("serialization").serialize
-local net = {}
 
-net.modem = component.modem
-net.config = {
-  [net.modem.address] = {
-    ["max_size"] = net.modem.maxPacketSize(),
-    ["max_strength"] = math.huge,
-    ["open_ports"] = {},
-    ["protected_ports"] = {}
+local net = {
+  ["modem"] = component.modem,
+  ["config"] = {
+    [net.modem.address] = {
+      ["max_size"] = net.modem.maxPacketSize(),
+      ["max_strength"] = math.huge,
+      ["open_ports"] = {},
+      ["protected_ports"] = {}
+    }
   }
 }
+setmetatable(net, {__index = net.modem})
 
 function net.setModem(modem)
   checkArg(1, modem, "table", "nil")
@@ -25,11 +27,22 @@ function net.setModem(modem)
     }
   end
   config[address].max_size = net.modem.maxPacketSize()
+  setmetatable(net, {__index = net.modem})
 end
 
 function net.setMaxStrength(strength)
   checkArg(1, strength, "number", "nil")
   net.config[net.modem.address].max_strength = strength or math.huge
+end
+
+function net.setStrength(strength)
+  checkArg(1, strength, "number")
+  local max_strength = net.config[net.modem.address].max_strength
+  if strength > max_strength then
+    strength = max_strength
+  end
+  net.modem.setStrength(strength)
+  return net.modem.getStrength()
 end
 
 function net.close(port)
