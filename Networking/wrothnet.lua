@@ -8,7 +8,8 @@ net.config = {
   [net.modem.address] = {
     ["max_size"] = net.modem.maxPacketSize(),
     ["max_strength"] = math.huge,
-    ["open_ports"] = {}
+    ["open_ports"] = {},
+    ["protected_ports"] = {}
   }
 }
 
@@ -48,15 +49,33 @@ function net.close(port)
   return result
 end
 
-function net.open(port)
+function net.open(port, protect)
+  checkArg(2, protected, "boolean", "nil")
   local open = net.modem.open
+  local config = net.config[net.modem.address]
+  local open, protected = config.open_ports, config.protected_ports
+
   local result = open(port)
-  local open_ports = net.config[net.modem.address].open_ports
-  if result == nil then
-    net.close(open_ports[1])
+  if not result then
+    if result == nil then
+      for _,v in ipairs(open_ports) do
+        if not protected[v] then
+          net.close(v)
+          break
+        end
+      end
+    else
+      net.close(port)
+    end
     result = open(port)
   end
-  table.insert(open_ports, port)
+  
+  if result then
+    table.insert(open_ports, port)
+    if protect then
+      protected[v] = true
+    end
+  end
   return result
 end
 
