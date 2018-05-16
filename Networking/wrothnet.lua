@@ -57,9 +57,8 @@ function net.close(port)
   local result = net.modem.close(port)
   if result then
     local config, address = net.config, net.modem.address
-    local open_ports = config[address].open_ports
     if port then
-      removeByValue(open_ports, port)
+      removeByValue(config[address].open_ports, port)
     else
       config[address].open_ports = {}
     end
