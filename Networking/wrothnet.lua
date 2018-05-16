@@ -1,50 +1,63 @@
 local event = require("event")
 local component = require("component")
 local serialize = require("serialization").serialize
-local wrothnet = {}
+local net = {}
 
-wrothnet.modem = component.modem
-wrothnet.max_size = wrothnet.modem.maxPacketSize()
-wrothnet.max_strength = math.huge
-wrothnet.open_ports = {}
+net.modem = component.modem
+net.config = {
+  [net.modem.address] = {
+    ["max_size"] = net.modem.maxPacketSize(),
+    ["max_strength"] = math.huge,
+    ["open_ports"] = {}
+  }
+}
 
-function wrothnet.setModem(modem)
+function net.setModem(modem)
   checkArg(1, modem, "table", "nil")
-  wrothnet.modem = modem or component.modem
-  wrothnet.max_size = wrothnet.modem.maxPacketSize()
+  net.modem = modem or component.modem
+  local config, address = net.config, net.modem.address
+  if not config[address] then
+    config[address] = {
+      ["max_strength"] = math.huge,
+      ["open_ports"] = {}
+    }
+  end
+  config[address].max_size = net.modem.maxPacketSize()
 end
 
-function wrothnet.setMaxStrength(strength)
+function net.setMaxStrength(strength)
   checkArg(1, strength, "number", "nil")
-  wrothnet.modem.max_strength = strength or math.huge
+  net.config[net.modem.address].max_strength = strength or math.huge
 end
 
-function wrothnet.close(port)
+function net.close(port)
   checkArg(1, port, "number", "nil")
-  local result = wrothnet.modem.close(port)
+  local result = net.modem.close(port)
+  if result then
+    local config, address = net.config, net.modem.address
   if result and port then
-    for k, v in pairs(wrothnet.open_ports) do
+    for k, v in pairs(config[address].open_ports) do
       if port == v then
-        table.remove(wrothnet.open_ports, k)
+        table.remove(config[address].open_ports, k)
       end
     end
   elseif result then
-    wrothnet.open_ports = {}
+    config[address].open_ports = {}
   end
   return result
 end
 
-function wrothnet.open(port)
+function net.open(port)
   checkArg (1, port, "number")
-  local result = wrothnet.modem.open(port)
+  local result = net.modem.open(port)
   if result == nil then
-    wrothnet.close(wrothnet.open_ports[1])
-    result = wrothnet.modem.open(port)
+    net.close(net.config[net.modem.address].open_ports[1])
+    result = net.modem.open(port)
   end
   return result
 end
 
-function wrothnet.broadcast(port, ...)
+function net.broadcast(port, ...)
   local data = {...}
   local result = false
   if #data > 8 then
@@ -56,12 +69,12 @@ function wrothnet.broadcast(port, ...)
         data[k] = compressed
       end
     end
-    if not wrothnet.modem.isOpen(port) then
-      wrothnet.open(port)
+    if not net.modem.isOpen(port) then
+      net.open(port)
     end
-    result = wrothnet.modem.broadcast(port, table.unpack(data))
+    result = net.modem.broadcast(port, table.unpack(data))
   end
   return result
 end
 
-return wrothnet
+return net
