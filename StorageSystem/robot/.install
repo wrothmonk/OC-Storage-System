@@ -21,12 +21,18 @@ local cp_args =
 }
 
 --Install the base OS
+print("Installing base OS\n" .. string.rep("-", 16))
 do
   local ok, ec = pcall(cp, table.unpack(cp_args))
   assert(ok, ec)
 end
 
 --Install required library files from OpenOS or other specified files
+print(
+  string.rep()"-", 16) ..
+  "\nInstalling additional libraries/files\n" ..
+  string.rep("-", 16)
+)
 do
   local libraries = loadData(install.from .. ".libraries")
 
@@ -64,7 +70,7 @@ do
   end
 end
 
-print("Installation complete!")
+print(string.rep("-", 16))
 
 --[[
 Handle .prop file since currently install only recognizes prop files at a
@@ -95,3 +101,5 @@ do
     end
   end
 end
+
+print("Installation complete!")
