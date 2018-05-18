@@ -46,6 +46,7 @@ do
         library .. ".lua expected in one of the following directories:\n\t"
         .. string.gsub(path[dir], ":", "\n\t") .. "\n"
       )
+    end
     cp_args[4] = fs.concat(install.to, install.root, dir)
 
     local ok, ec = pcall(cp, table.unpack(cp_args))
