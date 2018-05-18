@@ -24,7 +24,7 @@ local cp_args =
 --Install the base OS
 print(
   string.rep("-", width) ..
-  "\nInstalling base OS...\n" ..
+  "Installing base OS...\n" ..
   string.rep("-", width)
 )
 do
@@ -35,7 +35,7 @@ end
 --Install required library files from OpenOS or other specified files
 print(
   string.rep("-", width) ..
-  "\nInstalling additional libraries/files...\n" ..
+  "Installing additional libraries/files...\n" ..
   string.rep("-", width)
 )
 do
@@ -71,7 +71,7 @@ end
 --remove installation files
 print(
   string.rep("-", width) ..
-  "\nRemoving installation files...\n" ..
+  "Removing installation files...\n" ..
   string.rep("-", width)
 )
 do
