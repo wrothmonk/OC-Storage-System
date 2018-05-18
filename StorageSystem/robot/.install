@@ -8,7 +8,7 @@ local function loadData(path)
   local file = fs.open(path)
   local data = file:read(math.huge)
   file:close()
-  local load = load("return " .. lib_data)
+  local load = load("return " .. data)
   return load and load()
 end
 
@@ -34,23 +34,25 @@ do
     ["old"] = shell.getPath(),
     ["/lib"] = string.gsub(package.path .. ";", "%?.-;", ":")
   }
-  path["/lib/core"] = string.gsub(path.lib, "lib/?", "lib/core")
+  path["/lib/core"] = string.gsub(path["/lib"], "lib/?", "lib/core")
   setmetatable(path, {__index = function (table, key) return key end})
 
-  for dir, library in pairs(libaries) do
+  for dir, library_files in pairs(libraries) do
     shell.setPath(path[dir])
-    cp_args[3] = shell.resolve(library, "lua")
-    if not cp_args[3] then
-      error(
-        "\n" ..
-        library .. ".lua expected in one of the following directories:\n\t"
-        .. string.gsub(path[dir], ":", "\n\t") .. "\n"
-      )
-    end
-    cp_args[4] = fs.concat(install.to, install.root, dir)
+    for _, library in pairs(library_files) do
+      cp_args[3] = shell.resolve(library, "lua")
+      if not cp_args[3] then
+        error(
+          "\n" ..
+          library .. ".lua expected in one of the following directories:\n\t"
+          .. string.gsub(path[dir], ":", "\n\t") .. "\n"
+        )
+      end
+      cp_args[4] = fs.concat(install.to, install.root, dir)
 
-    local ok, ec = pcall(cp, table.unpack(cp_args))
-    assert(ok, ec)
+      local ok, ec = pcall(cp, table.unpack(cp_args))
+      assert(ok, ec)
+    end
   end
   shell.setPath(path.old)
 end
