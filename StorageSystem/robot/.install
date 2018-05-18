@@ -65,7 +65,15 @@ do
     end
   end
   shell.setPath(path.old)
+end
 
+--remove installation files
+print(
+  string.rep("-", 16) ..
+  "\nRemoving installation files...\n" ..
+  string.rep("-", 16)
+)
+do
   local install_files = {".install", ".prop", ".libraries"}
   for _, file in pairs(install_files) do
     local path = fs.concat(install_target, file)
