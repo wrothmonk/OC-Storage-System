@@ -1,0 +1,87 @@
+local shell = require("shell")
+local fs = require("filesystem")
+
+local cp, reason = loadfile(shell.resolve("cp", "lua"), "bt", _G)
+assert(cp, reason)
+
+local function loadData(path)
+  local file = fs.open(path)
+  local data = lib_file:read(math.huge)
+  file:close()
+  local load = load("return " .. lib_data)
+  return load and load()
+end
+
+local cp_args =
+{
+  "-vrx" .. (install.update and "ui" or ""),
+  "--skip=^%..+",
+  fs.concat(install.from, install.fromDir) .. "/.",
+  fs.concat(install.to  , install.root)
+}
+
+--Install the base OS
+do
+  local ok, ec = pcall(cp, table.unpack(cp_args))
+  assert(ok, ec)
+end
+
+--Install required library files from OpenOS or other specified files
+do
+  local libraries = loadData(install.from .. ".libraries")
+
+  local path = {
+    ["old"] = shell.getPath(),
+    ["/lib"] = string.gsub(package.path .. ";", "%?.-;", ":")
+  }
+  path["/lib/core"] = string.gsub(path.lib, "lib/?", "lib/core")
+  setmetatable(path, {__index = function (table, key) return key end})
+
+  for dir, library in pairs(libaries) do
+    shell.setPath(path[dir])
+    cp_args[3] = shell.resolve(library, "lua")
+    if not cp_args[3] then
+      error(
+        "\n" ..
+        library .. ".lua expected in one of the following directories:\n\t"
+        .. string.gsub(path[dir], ":", "\n\t") .. "\n"
+      )
+    cp_args[4] = fs.concat(install.to, install.root, dir)
+
+    local ok, ec = pcall(cp, table.unpack(cp_args))
+    assert(ok, ec)
+  end
+  shell.setPath(path.old)
+end
+
+print("Installation complete!")
+
+--[[
+Handle .prop file since currently install only recognizes prop files at a
+device's root, this will override any install options, so it'd be best to
+re-work after OC 1.7.3 when this is expected to change.
+]]--
+do
+  local prop = loadData(install.from .. ".prop")
+  if not prop then return end
+  local device = fs.get(install.to)
+
+  if prop.setlabel then
+    pcall(device.setLabel, prop.label)
+  end
+
+  if prop.setboot then
+    local address = device.address
+    if computer.setBootAddress(address) then
+      print("Boot address set to " .. address)
+    end
+  end
+
+  if prop.reboot then
+    io.write("Reboot now? [Y/n] ")
+    if ((io.read() or "n").."y"):match("^%s*[Yy]") then
+      print("\nRebooting now!\n")
+      computer.shutdown(true)
+    end
+  end
+end

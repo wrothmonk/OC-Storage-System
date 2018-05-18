@@ -100,6 +100,8 @@ do
   package.loaded.unicode = unicode
   package.loaded.filesystem = assert(loadfile("/lib/filesystem.lua"))()
 
+  package.path = "/lib/?.lua;./?.lua;/lib/?/init.lua;./?/init.lua"
+
 end
 
 status("Initializing file system...")

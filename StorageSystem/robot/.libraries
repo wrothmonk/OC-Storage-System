@@ -1,0 +1,4 @@
+{
+  ["/lib"] = {"package", "serialization", "wrothnet"},
+  ["/lib/core"] = {"full_event", "full_filesystem"}
+}
