@@ -57,7 +57,7 @@ do
   shell.setPath(path.old)
 
   local install_files = {".install", ".prop", ".libraries"}
-  for _, file in install_files do
+  for _, file in pairs(install_files) do
     local path = fs.concat(install_target, file)
     fs.remove(path)
     print("removed '" .. path .. "'")
