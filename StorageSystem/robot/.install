@@ -21,7 +21,11 @@ local cp_args =
 }
 
 --Install the base OS
-print("Installing base OS\n" .. string.rep("-", 16))
+print(
+  string.rep("-", 16) ..
+  "\nInstalling base OS...\n" ..
+  string.rep("-", 16)
+)
 do
   local ok, ec = pcall(cp, table.unpack(cp_args))
   assert(ok, ec)
@@ -29,8 +33,8 @@ end
 
 --Install required library files from OpenOS or other specified files
 print(
-  string.rep()"-", 16) ..
-  "\nInstalling additional libraries/files\n" ..
+  string.rep("-", 16) ..
+  "\nInstalling additional libraries/files...\n" ..
   string.rep("-", 16)
 )
 do
