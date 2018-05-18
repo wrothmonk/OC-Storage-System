@@ -56,9 +56,12 @@ do
   end
   shell.setPath(path.old)
 
-  fs.remove(fs.concat(install_target, ".install"))
-  fs.remove(fs.concat(install_target, ".prop"))
-  fs.remove(fs.concat(install_target, ".libraries"))
+  local install_files = {".install", ".prop", ".libraries"}
+  for _, file in install_files do
+    local path = fs.concat(install_target, file)
+    fs.remove(path)
+    print("removed '" .. path .. "'")
+  end
 end
 
 print("Installation complete!")
