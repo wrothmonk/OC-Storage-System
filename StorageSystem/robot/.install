@@ -1,5 +1,6 @@
 local shell = require("shell")
 local fs = require("filesystem")
+local width = require("term").getViewport()
 
 local cp, reason = loadfile(shell.resolve("cp", "lua"), "bt", _G)
 assert(cp, reason)
@@ -22,9 +23,9 @@ local cp_args =
 
 --Install the base OS
 print(
-  string.rep("-", 16) ..
+  string.rep("-", width) ..
   "\nInstalling base OS...\n" ..
-  string.rep("-", 16)
+  string.rep("-", width)
 )
 do
   local ok, ec = pcall(cp, table.unpack(cp_args))
@@ -33,9 +34,9 @@ end
 
 --Install required library files from OpenOS or other specified files
 print(
-  string.rep("-", 16) ..
+  string.rep("-", width) ..
   "\nInstalling additional libraries/files...\n" ..
-  string.rep("-", 16)
+  string.rep("-", width)
 )
 do
   local libraries = loadData(install.from .. ".libraries")
@@ -69,9 +70,9 @@ end
 
 --remove installation files
 print(
-  string.rep("-", 16) ..
+  string.rep("-", width) ..
   "\nRemoving installation files...\n" ..
-  string.rep("-", 16)
+  string.rep("-", width)
 )
 do
   local install_files = {".install", ".prop", ".libraries"}
@@ -82,7 +83,7 @@ do
   end
 end
 
-print(string.rep("-", 16))
+print(string.rep("-", width))
 
 --[[
 Handle .prop file since currently install only recognizes prop files at a
