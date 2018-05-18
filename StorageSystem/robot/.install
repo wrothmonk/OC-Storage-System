@@ -6,7 +6,7 @@ assert(cp, reason)
 
 local function loadData(path)
   local file = fs.open(path)
-  local data = lib_file:read(math.huge)
+  local data = file:read(math.huge)
   file:close()
   local load = load("return " .. lib_data)
   return load and load()
