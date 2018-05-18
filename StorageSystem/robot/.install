@@ -12,12 +12,12 @@ local function loadData(path)
   return load and load()
 end
 
+local install_target = fs.concat(install.to, install.root)
 local cp_args =
 {
   "-vrx" .. (install.update and "ui" or ""),
-  "--skip=^%..+",
   fs.concat(install.from, install.fromDir) .. "/.",
-  fs.concat(install.to  , install.root)
+  install_target
 }
 
 --Install the base OS
@@ -40,21 +40,25 @@ do
   for dir, library_files in pairs(libraries) do
     shell.setPath(path[dir])
     for _, library in pairs(library_files) do
-      cp_args[3] = shell.resolve(library, "lua")
-      if not cp_args[3] then
+      cp_args[2] = shell.resolve(library, "lua")
+      if not cp_args[2] then
         error(
           "\n" ..
           library .. ".lua expected in one of the following directories:\n\t"
           .. string.gsub(path[dir], ":", "\n\t") .. "\n"
         )
       end
-      cp_args[4] = fs.concat(install.to, install.root, dir)
+      cp_args[3] = fs.concat(install_target, dir)
 
       local ok, ec = pcall(cp, table.unpack(cp_args))
       assert(ok, ec)
     end
   end
   shell.setPath(path.old)
+
+  fs.remove(fs.concat(install_target, ".install"))
+  fs.remove(fs.concat(install_target, ".prop"))
+  fs.remove(fs.concat(install_target, ".libraries"))
 end
 
 print("Installation complete!")
