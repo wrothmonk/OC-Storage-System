@@ -40,11 +40,6 @@ local function status(msg)
     end
   end
 
-  -- report status to paired server
-  if package and package.loaded.communication then
-    package.loaded.communication.status(msg)
-  end
-
   -- boot can be slow in some environments, protect from timeouts
   if uptime() - last_sleep > 1 then
     local signal = table.pack(pull(0))
