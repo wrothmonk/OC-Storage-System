@@ -1,6 +1,6 @@
 function loadfile(filename, ...)
   if filename:sub(1,1) ~= "/" then
-    filename = (os.getenv("PWD") or "/") .. "/" .. filename
+    filename = "//" .. filename
   end
   local handle, open_reason = require("filesystem").open(filename)
   if not handle then
