@@ -1,4 +1,6 @@
 {
   ["/lib"] = {"package", "serialization"},
-  ["/lib/core"] = {"full_event", "full_filesystem"}
+  ["/lib/core"] = {"full_event", "full_filesystem"},
+  ["/lib/wnet_drivers"] = {"modem"},
+  ["/boot"] = {"70_wnet"}
 }

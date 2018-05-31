@@ -60,6 +60,9 @@ do
         )
       end
       cp_args[3] = fs.concat(install_target, dir)
+      if not fs.isDirectory(cp_args[3]) then
+        fs.makeDirectory(cp_args[3])
+      end
 
       local ok, ec = pcall(cp, table.unpack(cp_args))
       assert(ok, ec)
