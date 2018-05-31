@@ -4,7 +4,10 @@ local net = {} --library table
 
 --[[Layer 1 implementation]]
 local drivers = {} --driver cache
-local devices = {} --network devices
+local devices = { --network devices
+  ["by_address"] = {},
+  ["by_type"] = {}
+}
 net.drivers = drivers
 net.devices = devices
 
@@ -29,21 +32,47 @@ function net.registerDevice(address, type, driver_path)
     end
   })
 
-  devices[address] = device
+  --instert device into devices table
+  devices.by_address[address] = device
+  if not devices.by_type[type] then
+    devices.by_type[type] = {n = 0}
+  end
+  devices.by_type[type][address] = device
+  devices.by_type[type].n = devices.by_type[type].n + 1
+
 end
 
 function net.removeDevice(address)
-  devices[address] = nil
+  --get device attributes
+  local device = devices.by_address[address]
+  local type = device.type
+
+  --remove from type table
+  devices.by_type[type][address] = nil
+  local n = devices.by_type[type].n - 1
+  if n = 0 then --if last device of type
+    devices.by_type[type] = nil
+    net.removeDriver(type)
+  else
+    devices.by_type[type].n = n
+  end
+
+  --remove from address table
+  devices.by_address[address] = nil
+
 end
 
 function net.removeDriver(type)
-  drivers[type].deactivate()
-  drivers[type] = nil
-  for address, device in pairs(devices) do
-    if device.type == type then
-      net.removeDevice(address)
-    end
+  drivers[type].deactivate() --call deactivation function to clean up listeners
+  drivers[type] = nil --remove driver
+
+  --remove any devices relating to the driver
+  for address, device in pairs(devices.by_type[type]) do
+    devices.by_address[address] = nil
+    device.by_type[type][address] = nil
   end
+  device.by_type[type] = nil
+  
 end
 
 return net
