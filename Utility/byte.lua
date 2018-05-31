@@ -6,7 +6,7 @@ function byte.numberToByte(number)
   repeat
     bytestring = string.char(number%256) .. bytestring
     number = math.floor(number/256)
-  until number = 0
+  until number == 0
   return bytestring
 end
 
