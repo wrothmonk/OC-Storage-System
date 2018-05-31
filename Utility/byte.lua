@@ -1,6 +1,6 @@
 local byte = {} -- library table
 
-function byte.numberToByte(number)
+function byte.toByte(number)
   checkArg(1, number, "number")
   local bytestring = ""
   repeat
@@ -10,7 +10,7 @@ function byte.numberToByte(number)
   return bytestring
 end
 
-function byte.byteToNumber(bytestring)
+function byte.toNumber(bytestring)
   checkArg(1, bytestring, "string")
   local total = 0
   for i = 1, #bytestring do
