@@ -47,18 +47,15 @@ function net.removeDevice(address)
   local device = devices.by_address[address]
   local type = device.type
 
-  --remove from type table
-  devices.by_type[type][address] = nil
+  --remove from device tables
   local n = devices.by_type[type].n - 1
-  if n = 0 then --if last device of type
-    devices.by_type[type] = nil
+  if n == 0 then --if last device of type
     net.removeDriver(type)
   else
+    devices.by_type[type][address] = nil
     devices.by_type[type].n = n
+    devices.by_address[address] = nil
   end
-
-  --remove from address table
-  devices.by_address[address] = nil
 
 end
 
@@ -67,12 +64,14 @@ function net.removeDriver(type)
   drivers[type] = nil --remove driver
 
   --remove any devices relating to the driver
+  --remove device count for iteration (no longer neccesary anyway)
+  devices.by_type[type].n = nil
   for address, device in pairs(devices.by_type[type]) do
     devices.by_address[address] = nil
-    device.by_type[type][address] = nil
+    devices.by_type[type][address] = nil
   end
-  device.by_type[type] = nil
-  
+  devices.by_type[type] = nil
+
 end
 
 return net
