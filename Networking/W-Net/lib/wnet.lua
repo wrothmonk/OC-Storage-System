@@ -39,8 +39,8 @@ end
 function net.removeDriver(type)
   drivers[type].deactivate()
   drivers[type] = nil
-  for address, device in pairs(devices)
-    if device.type = type then
+  for address, device in pairs(devices) do
+    if device.type == type then
       net.removeDevice(address)
     end
   end

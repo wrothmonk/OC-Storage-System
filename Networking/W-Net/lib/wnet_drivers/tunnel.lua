@@ -1,4 +1,5 @@
 local component = require("component")
+local event = require("event")
 local byte = require("byte")
 
 --create driver table & set passthrough methods to "proxy" the component
@@ -118,14 +119,16 @@ local function listener(_, ...)
   end
 end
 
+local listener_id
+
 function driver.enable(address, enable)
   if enable == nil then
     enable = true
   end
   if enable then
     --enable driver listener if it is not already active
-    if driver.active.id == nil then
-      driver.active.id = event.listen("modem_message", listener)
+    if listener_id == nil then
+      listener_id = event.listen("modem_message", listener)
     end
     driver.active[address] = true
   else
@@ -135,7 +138,9 @@ end
 
 --Driver deactivation function called before removing driver from cache
 function driver.deactivate()
-  event.cancel(driver.active[id])
+  if listener_id then
+    event.cancel(listener_id)
+  end
 end
 
 return driver

@@ -23,9 +23,10 @@ local function netComponentRemoved(_, address, type)
 end
 
 --flush driver from cache if the relevant component is unavailable
-local function netComponentUnavaiable(_, type)
+local function netComponentUnavailable(_, type)
   net.removeDriver(type)
 end
 
 event.listen("component_added", netComponentAdded)
-event.listen("component_unavailable", netComponentUnavaiable)
+event.list("component_removed", netComponentRemoved)
+event.listen("component_unavailable", netComponentUnavailable)
