@@ -16,6 +16,11 @@ local driver = setmetatable({}, {
   end
 })
 
+--driver internal variables that should be accessable at higher layers
+driver.internal = {}
+local active = {}
+driver.internal.active = active
+
 --[[Fill-in functions]]
 
 function driver.isWireless()
@@ -107,14 +112,11 @@ end
 
 --net_device event system and toggling
 
-local active = {}
-driver.active = active
-
 local function listener(_, ...)
   local message = {...}
   local address, port = message[1], table.remove(message, 5)
   local portActive = ports[address] and ports[address][btye.toNumber(port)]
-  if driver.active[address] and portActive then
+  if driver.internal.active[address] and portActive then
     event.push("wnet_device", table.unpack(message))
   end
 end
@@ -130,9 +132,9 @@ function driver.enable(address, enable)
     if listener_id == nil then
       listener_id = event.listen("modem_message", listener)
     end
-    driver.active[address] = true
+    driver.internal.active[address] = true
   else
-    driver.active[address] = nil
+    driver.internal.active[address] = nil
   end
 end
 
