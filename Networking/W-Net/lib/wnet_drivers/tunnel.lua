@@ -72,7 +72,7 @@ function driver.send(address, _, port, ...)
   if #message > driver.getPartCount(address) then
     error("packet has too many parts")
   else
-    table.insert(message, byte.toByte(port), 1)
+    table.insert(message, 1, byte.toByte(port))
     return component.invoke(address, "send", table.unpack(message))
   end
 end
