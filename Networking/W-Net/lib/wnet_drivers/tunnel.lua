@@ -158,6 +158,7 @@ function driver.methods(address)
     ["broadcast"] = methods.send,
     ["setStrength"] = false,
     ["getStrength"] = false,
+    ["getCost"] = false,
     ["getPartCount"] = false,
     ["enable"] = false
   }

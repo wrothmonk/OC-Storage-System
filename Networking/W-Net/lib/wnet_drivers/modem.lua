@@ -88,6 +88,7 @@ function driver.methods(address)
     the card is wireless or not.]]
     ["setStrength"] = methods.setStrength or false,
     ["getStrength"] = methods.getStrength or false,
+    ["getCost"] = false,
     ["getPartCount"] = false,
     ["enable"] = false
   }
