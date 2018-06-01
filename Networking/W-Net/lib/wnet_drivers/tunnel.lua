@@ -120,7 +120,7 @@ local function listener(_, ...)
   end
 end
 
-local listener_id
+local listener_active
 
 function driver.enable(address, enable)
   if enable == nil then
@@ -128,8 +128,8 @@ function driver.enable(address, enable)
   end
   if enable then
     --enable driver listener if it is not already active
-    if listener_id == nil then
-      listener_id = event.listen("modem_message", listener)
+    if not listener_active then
+      listener_active = event.listen("modem_message", listener)
     end
     driver.active[address] = true
   else
@@ -139,8 +139,10 @@ end
 
 --Driver deactivation function called before removing driver from cache
 function driver.deactivate()
-  if listener_id then
-    event.cancel(listener_id)
+  if listener_active then
+    event.ignore("modem_message", listener)
+    --in case somebody wants to deactivate the listener w/o removing the driver
+    listener_active = nil
   end
 end
 
