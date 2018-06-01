@@ -16,6 +16,10 @@ local driver = setmetatable({}, {
   end
 })
 
+--active device tracking for listener
+local active = {}
+driver.active = active
+
 --[[Fill-in functions]]
 
 function driver.isWireless()
@@ -26,12 +30,13 @@ function driver.isWired()
   return true
 end
   --[[
-  Despite the tunnel be a wireless means of transmission, for the purpose of
+  Despite the tunnel being a wireless means of transmission, for the purpose of
   interacting with it, it is essentially a wired connection as wireless
   "strength" and "distance" are not applicable.
   ]]
 
 function driver.maxPacketSize(address)
+  checkArg(1, address, "string")
   --four bytes of overhead for port header
   return component.invoke(address, "maxPacketSize") - 4
 end
@@ -39,10 +44,15 @@ end
 local ports = {} --virtual port tracking table
 
 function driver.isOpen(address, port)
-  return ports[address] and not not ports[address][port]
+  checkArg(1, address, "string")
+  checkArg(2, port, "number")
+  --doubt 'not's to force to boolean if nil entry
+  return not not ports[address] and not not ports[address][port]
 end
 
 function driver.open(address, port)
+  checkArg(1, address, "string")
+  checkArg(2, port, "number")
   if not ports[address] then
     ports[address] = {}
   end
@@ -55,6 +65,8 @@ function driver.open(address, port)
 end
 
 function driver.close(address, port)
+  checkArg(1, address, "string")
+  checkArg(2, port, "number")
   if ports[address] and ports[address][port] then
     ports[address][port] = nil
     return true
@@ -64,16 +76,20 @@ function driver.close(address, port)
 end
 
 function driver.send(address, _, port, ...)
+  checkArg(1, address, "string")
+  checkArg(3, port, "number")
   local message = {...}
   if #message > driver.getPartCount(address) then
     error("packet has too many parts")
   else
-    table.insert(message, byte.toByte(port), 1)
+    table.insert(message, 1, byte.toByte(port))
     return component.invoke(address, "send", table.unpack(message))
   end
 end
 
 function driver.broadcast(address, port, ...)
+  checkArg(1, address, "string")
+  checkArg(2, port, "number")
   return driver.send(address, nil, port, ...)
 end
 
@@ -87,7 +103,7 @@ end
 
 --[[W-net Driver specific functions]]
 
---energy cost function for wireless messages
+--energy cost function
 function driver.getCost()
   return 356
   --[[
@@ -107,28 +123,25 @@ end
 
 --net_device event system and toggling
 
-local active = {}
-driver.active = active
-
 local function listener(_, ...)
   local message = {...}
   local address, port = message[1], table.remove(message, 5)
-  local portActive = ports[address] and ports[address][btye.toNumber(port)]
+  local portActive = ports[address] and ports[address][byte.toNumber(port)]
   if driver.active[address] and portActive then
     event.push("wnet_device", table.unpack(message))
   end
 end
 
-local listener_id
+local listener_active
 
 function driver.enable(address, enable)
+  checkArg(1, address, "string")
   if enable == nil then
     enable = true
   end
   if enable then
-    --enable driver listener if it is not already active
-    if listener_id == nil then
-      listener_id = event.listen("modem_message", listener)
+    if not listener_active then
+      listener_active = event.listen("modem_message", listener)
     end
     driver.active[address] = true
   else
@@ -138,9 +151,35 @@ end
 
 --Driver deactivation function called before removing driver from cache
 function driver.deactivate()
-  if listener_id then
-    event.cancel(listener_id)
+  if listener_active then
+    event.ignore("modem_message", listener)
+    --in case somebody wants to deactivate the listener w/o removing the driver
+    listener_active = nil
   end
+end
+
+--[[Function that returns table that contains ONLY valid calls that can be made
+as if the driver was a component. Resulting table should be similar to those
+from component.methods]]
+function driver.methods(address)
+  checkArg(1, address, "string")
+  local methods = component.methods(address)
+  local driver_methods = {
+    ["isWireless"] = false,
+    ["isWired"] = false,
+    ["isOpen"] = false,
+    ["open"] = false,
+    ["close"] = false,
+    ["broadcast"] = methods.send,
+    ["setStrength"] = false,
+    ["getStrength"] = false,
+    ["getCost"] = false,
+    ["getPartCount"] = false,
+    ["enable"] = false
+  }
+  setmetatable(driver_methods, {__index = methods})
+
+  return driver_methods
 end
 
 return driver
