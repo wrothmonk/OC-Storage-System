@@ -43,7 +43,7 @@ end
 local ports = {} --virtual port tracking table
 
 function driver.isOpen(address, port)
-  return ports[address] and not not ports[address][port]
+  return not not ports[address] and not not ports[address][port]
 end
 
 function driver.open(address, port)
