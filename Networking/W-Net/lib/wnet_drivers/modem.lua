@@ -11,9 +11,8 @@ local driver = setmetatable({}, {
 })
 
 --driver internal variables that should be accessable at higher layers
-driver.internal = {}
 local active = {}
-driver.internal.active = active
+driver.active = active
 
 --[[Fill-in functions]]
 
@@ -50,7 +49,7 @@ end
 
 local function listener(_, ...)
   local message = {...}
-  if driver.internal.active[message[1]] then
+  if driver.active[message[1]] then
     event.push("wnet_device", table.unpack(message))
   end
 end
@@ -66,9 +65,9 @@ function driver.enable(address, enable)
     if listener_id == nil then
       listener_id = event.listen("modem_message", listener)
     end
-    driver.internal.active[address] = true
+    driver.active[address] = true
   else
-    driver.internal.active[address] = nil
+    driver.active[address] = nil
   end
 end
 
@@ -77,6 +76,25 @@ function driver.deactivate()
   if listener_id then
     event.cancel(listener_id)
   end
+end
+
+--[[Function that returns table that contains ONLY valid calls that can be made
+as if the driver was a component. Resulting table should be similar to those
+from component.methods]]
+function driver.methods(address)
+  local methods = component.methods(address)
+  local driver_methods = {
+    --[[setStrength and getStrength may or may not be present depending on if
+    the card is wireless or not.]]
+    ["setStrength"] = methods.setStrength or false,
+    ["getStrength"] = methods.getStrength or false,
+    ["getPartCount"] = false,
+    ["enable"] = false
+  }
+  --set fallback table
+  setmetatable(driver_methods, {__index = methods})
+
+  return driver_methods
 end
 
 return driver

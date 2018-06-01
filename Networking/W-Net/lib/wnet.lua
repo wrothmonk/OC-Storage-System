@@ -26,8 +26,8 @@ function net.registerDevice(address, c_type, driver_path)
   --create proxy to driver for device methods
   device = setmetatable(device, {
     __index = function(self, method)
-      --device object should only access driver methods
-      if type(self.driver[method]) == "function" and method ~= "internal" then
+      --device object should only access driver component methods
+      if driver.methods(self.address)[method] ~= nil then
         return function(...)
           return self.driver[method](self.address, ...)
         end
