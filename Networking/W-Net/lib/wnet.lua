@@ -27,7 +27,7 @@ function net.registerDevice(address, c_type, driver_path)
   device = setmetatable(device, {
     __index = function(self, method)
       --device object should only access driver component methods
-      if driver.methods(self.address)[method] ~= nil then
+      if self.driver.methods(self.address)[method] ~= nil then
         return function(...)
           return self.driver[method](self.address, ...)
         end
