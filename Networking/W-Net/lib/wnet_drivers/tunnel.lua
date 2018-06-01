@@ -114,7 +114,7 @@ end
 local function listener(_, ...)
   local message = {...}
   local address, port = message[1], table.remove(message, 5)
-  local portActive = ports[address] and ports[address][btye.toNumber(port)]
+  local portActive = ports[address] and ports[address][byte.toNumber(port)]
   if driver.active[address] and portActive then
     event.push("wnet_device", table.unpack(message))
   end
