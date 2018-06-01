@@ -10,13 +10,15 @@ local driver = setmetatable({}, {
   end
 })
 
---driver internal variables that should be accessable at higher layers
+--active device tracking for listener
 local active = {}
 driver.active = active
 
 --[[Fill-in functions]]
 
 function driver.setStrength(address, value)
+  checkArg(1, address, "string")
+  checkArg(2, value, "number")
   if component.methods(address).setStrength == nil then
     return 0
   else
@@ -25,6 +27,7 @@ function driver.setStrength(address, value)
 end
 
 function driver.getStrength(address)
+  checkArg(1, address, "string")
   if component.methods(address).getStrength == nil then
     return 0
   else
@@ -34,7 +37,7 @@ end
 
 --[[W-net Driver specific functions]]
 
---energy cost function for wireless messages
+--energy cost function
 function driver.getCost(_, distance)
   checkArg(2, distance, "number")
   return distance * 0.05
@@ -57,11 +60,12 @@ end
 local listener_active
 
 function driver.enable(address, enable)
+  checkArg(1, address, "string")
+  checkArg(2, enable, "boolean", "nil")
   if enable == nil then
     enable = true
   end
   if enable then
-    --enable driver listener if it is not already active
     if not listener_active then
       listener_active = event.listen("modem_message", listener)
     end
@@ -84,6 +88,7 @@ end
 as if the driver was a component. Resulting table should be similar to those
 from component.methods]]
 function driver.methods(address)
+  checkArg(1, address, "string")
   local methods = component.methods(address)
   local driver_methods = {
     --[[setStrength and getStrength may or may not be present depending on if
@@ -94,7 +99,6 @@ function driver.methods(address)
     ["getPartCount"] = false,
     ["enable"] = false
   }
-  --set fallback table
   setmetatable(driver_methods, {__index = methods})
 
   return driver_methods

@@ -16,7 +16,6 @@ function net.registerDevice(address, c_type, driver_path)
     drivers[c_type] = loadfile(driver_path)()
   end
 
-  --device aspects
   local device = {
     ["address"] = address,
     ["type"] = c_type,
@@ -48,11 +47,9 @@ function net.registerDevice(address, c_type, driver_path)
 end
 
 function net.removeDevice(address)
-  --get device attributes
   local device = devices.by_address[address]
   local c_type = device.type
 
-  --remove from device tables
   local n = devices.by_type[c_type].n - 1
   if n == 0 then --if last device of c_type
     net.removeDriver(c_type)
@@ -66,7 +63,7 @@ end
 
 function net.removeDriver(c_type)
   drivers[c_type].deactivate() --call deactivation function to clean up listeners
-  drivers[c_type] = nil --remove driver
+  drivers[c_type] = nil 
 
   --remove any devices relating to the driver
   --remove device count for iteration (no longer neccesary anyway)
