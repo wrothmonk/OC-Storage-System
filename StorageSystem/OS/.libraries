@@ -2,5 +2,5 @@
   ["/lib"] = {"package", "serialization"},
   ["/lib/core"] = {"full_event", "full_filesystem"},
   ["/lib/wnet_drivers"] = {"modem"},
-  ["/boot"] = {"70_wnet"}
+  ["/boot"] = {"04_component.lua", "70_wnet"}
 }
