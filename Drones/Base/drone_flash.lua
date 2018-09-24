@@ -66,11 +66,10 @@ local function createSettings()
   for key, setting in pairs(settings) do
     io.write("Set value for: " .. key .. "\nDefault: " .. setting .. "\n")
 
+    --table for storing options that would be unreasonable to type
     local optionList = {}
 
     if key == "address" then
-      --list modem options
-
       for address, _ in component.list("modem") do
         optionList[#optionList+1] = address
       end
