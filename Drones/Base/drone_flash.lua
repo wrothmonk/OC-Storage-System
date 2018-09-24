@@ -91,6 +91,11 @@ local function createSettings()
         response = optionList[response]
       end
 
+      --Convert response to number if appropriate
+      if type(setting) = "number" then
+        tonumber(response)
+      end
+
       settings[key] = response
 
     end
