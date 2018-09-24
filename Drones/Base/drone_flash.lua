@@ -1,12 +1,12 @@
 local component = require("component")
 local shell = require("shell")
-local compressLua = require("w-compression").compressLua
-local droneData = "/usr/misc/Drones/Drone_Data/"
+local compressLua = require("w-compress").compressLua
+local droneData = "/usr/misc/Drones/"
 
 local args, options = shell.parse(...)
 
 if #args < 1 then
-  io.write("Usage: flash [-cq] [file]\n")
+  io.write("Usage: flash [-cq] [settings file]\n")
   io.write(" c: create a drone settings file.\n")
   io.write(" q: quiet mode.\n")
   return
@@ -38,7 +38,7 @@ local function flashRom()
 
   --flash settings
   do
-    local file = asset(io.open(droneData .. args[1], "rb"))
+    local file = assert(io.open(droneData .. args[1], "rb"))
     local settings = file:read("*a")
     file:close()
     eeprom.setData(settings)
@@ -52,10 +52,10 @@ local function flashRom()
 
 end
 
-local function createSettings(args)
+local function createSettings()
   --default settings
   local settings = {
-    address = component.modem.address(),
+    address = component.modem.address,
     port = 4011,
     range = 5,
     password = "password",
@@ -86,15 +86,20 @@ local function createSettings(args)
 
     if response then
       --handle modem selection
-      if key = "address" then
-        responce = modems[response]
+      if key == "address" then
+        response = modems[response]
       end
 
+      --add quoutes to string settings
+      if type(settings[key]) == "string" then
+        response = "\"" .. response .. "\""
+      end
+      
       settings[key] = response
 
     end
 
-    io.write(string.rep("-", 25))
+    io.write(string.rep("-", 25) .. "\n")
   end
 
   --conver settings table to string
