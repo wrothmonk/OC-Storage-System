@@ -92,8 +92,8 @@ local function createSettings()
       end
 
       --Convert response to number if appropriate
-      if type(setting) = "number" then
-        tonumber(response)
+      if type(setting) == "number" then
+        response = tonumber(response)
       end
 
       settings[key] = response
