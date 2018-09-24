@@ -97,22 +97,22 @@ local function createSettings()
     io.write(string.rep("-", 25) .. "\n")
   end
 
-  --conver settings table to string
+  --convert settings table to string
   local settingString = "{"
   for k, v in pairs(settings) do
 
     --add quoutes to string settings
-    if type(settings[k]) == "string" then
+    if type(v) == "string" then
       v = "\"" .. v .. "\""
     end
 
     settingString = settingString .. k .. " = " .. v .. ", "
   end
   --remove extra comma
-  settingString = string.sub(settingString, 1, -2) .. "}"
+  settingString = string.sub(settingString, 1, -3) .. "}"
 
   --write settings to file
-  local settingsFile = assert(io.open(droneData .. args[1]))
+  local settingsFile = assert(io.open(droneData .. args[1], "wb"))
   settingsFile:write(settingString)
   settingsFile:close()
   io.write("Settings saved to: " .. droneData .. args[1] .. "\n")
