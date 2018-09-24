@@ -66,14 +66,16 @@ local function createSettings()
   for key, setting in pairs(settings) do
     io.write("Set value for: " .. key .. "\nDefault: " .. setting .. "\n")
 
+    local optionList = {}
+
     if key == "address" then
       --list modem options
-      local modems = {}
+
       for address, _ in component.list("modem") do
-        modems[#modems+1] = address
+        optionList[#optionList+1] = address
       end
-      for i = 1, #modems do
-        io.write(i .. ": " .. modems[i] .."\n")
+      for i = 1, #optionList do
+        io.write(i .. ": " .. optionList[i] .."\n")
       end
     end
 
@@ -87,7 +89,7 @@ local function createSettings()
     if response then
       --handle modem selection
       if key == "address" then
-        response = modems[response]
+        response = optionList[response]
       end
 
       settings[key] = response
