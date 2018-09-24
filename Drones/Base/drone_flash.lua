@@ -90,11 +90,6 @@ local function createSettings()
         response = modems[response]
       end
 
-      --add quoutes to string settings
-      if type(settings[key]) == "string" then
-        response = "\"" .. response .. "\""
-      end
-      
       settings[key] = response
 
     end
@@ -105,6 +100,12 @@ local function createSettings()
   --conver settings table to string
   local settingString = "{"
   for k, v in pairs(settings) do
+
+    --add quoutes to string settings
+    if type(settings[k]) == "string" then
+      v = "\"" .. v .. "\""
+    end
+
     settingString = settingString .. k .. " = " .. v .. ", "
   end
   --remove extra comma
