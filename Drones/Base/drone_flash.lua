@@ -58,7 +58,6 @@ local function createSettings()
     address = component.modem.address,
     port = 4011,
     range = 5,
-    password = "password",
     name = "Unsecure Drone"
   }
 

@@ -1,9 +1,26 @@
+--------------------------------------------------------------------------------
+--[[1. Data Structures]]
+--------------------------------------------------------------------------------
+
 --establish sandbox for later use before adding anything to global
 sandbox = {}
 for k, v in pairs(_G) do
   sandbox[k] = v
 end
-sandbox._G = sandbox
+_G = sandbox
+
+--set up root table for holding controller command functions and data
+root = {
+  commands = {      --normal commands
+    sandboxed = {}  --sandboxed commands
+  },
+  libraries = {},   --table for holding library programs (sandboxed)
+  data = {}         --table for holding data as it is being assembled
+}
+
+--------------------------------------------------------------------------------
+--[[2. Component initializtion]]
+--------------------------------------------------------------------------------
 
 --add component proxies to global
 for address, componentType in component.list() do
@@ -11,6 +28,11 @@ for address, componentType in component.list() do
   if _G[componentType] == nil then
     _G[componentType] = component.proxy(address)
   end
+end
+
+--Make sure modem is available as it is vital for booting
+if not modem then
+  error("No modem component!")
 end
 
 --get eeprom settings
@@ -22,15 +44,29 @@ if modem.isWireless() then
   modem.setStrength(2 * settings.range)
 end
 
---function for testing if command signals are from the controller
+--------------------------------------------------------------------------------
+--[[3. Component overrides]]
+--------------------------------------------------------------------------------
+
+--compontent function overrides
+overrides = {
+  --Invalidate eeprom usage
+  eeprom = setmetatable({}, {
+    __index = function()
+      error("Attempted tampering with EEPROM")
+    end
+  }),
+}
+
+--helper function for testing if command signals are from the controller
 function _isCommand(signal)
   if
     signal and signal.n > 6
-    and signal[1] == "modem_message"    --Signal type
-    and signal[3] == settings.address   --Sending address
-    and signal[4] == settings.port      --Port message was sent on
-    and signal[5] <= settings.range  --How close the sender is
-    and signal[6] == settings.password  --Password for ordering commands
+    and signal[1] == "modem_message"              --Signal type
+    and signal[3] == settings.address             --Sending address
+    and signal[4] == settings.port                --Port message was sent on
+    and signal[5] <= settings.range               --How close the sender is
+    and string.find(signal[6], "commands%.") == 1 --Command reference
   then
     return true
   else
@@ -38,52 +74,57 @@ function _isCommand(signal)
   end
 end
 
---set up root table for holding controller command functions and data
-sandBoxed = {} --table for storing sandboxed functions
-commands = setmetatable({sandBoxed = sandBoxed}, {__index = sandBoxed})
-root = {
-  commands = commands,
-  data = {} --table for holding data as it is being assembled
-}
+--pullSignal override to prioritize command messages
+function overrides.computer.pullSignal(computer, timeout)
+  checkArg(1, timeout, "number")
 
---setup pullSignal override for command messages
-_pull = computer.pullSignal
-function sandbox.computer.pullSignal(timeout)
+  local deadline = computer.uptime() + (timeout or 0)
   local result = table.pack(_pull(timeout))
+
   if _isCommand(result) then
     --execute the command with further parts of the message as args
-    commands[result[7]](table.unpack(result, 8))
+    _executeCommand(result[6], table.unpack(result, 7))
+
+    --Get next pullSignal so sandboxed functions can't see command messages
+    local timeout = deadline-computer.uptime()
+    if timeout >= 0 then
+      return computer.pullSignal(deadline-computer.uptime())
+    else
+      return nil
+    end
+  else
+    return table.unpack(result)
   end
 end
 
---setup pushSignal override to prevent fake commands
-_push = computer.pushSignal
-function sandbox.computer.pushSignal(...)
+--pushSignal override to prevent fake commands
+function overrides.computer.pushSignal(computer, ...)
   local args = table.pack(...)
   --Make sure signal being pushed is not a valid command signal
   if not _isCommand(args) then
-    _push(table.unpack(args))
+    computer.pushSignal(table.unpack(args))
   end
 end
 
 --setup component overrides
-_proxy = component.proxy
-function sandbox.component.proxy(address)
-  local compProxy = _proxy(address)
-  if address == eeprom.address then
+
+function component.proxy(address)
+  checkArg(1, address, "string")
+
+  local compProxy = _proxy(address) --proxy override table
+
+  if address == eeprom.address then       --eeprom handling
     --prevent eeprom from being proxied
     error("Illegal proxy: EEPROM")
-  elseif address == computer.address then
-
+  elseif address == computer.address then --computer handling
     --prevent shutdown command
     function compProxy.shutdown()
       error("Illegal call: computer.shutdown")
     end
     --use signal overrides
-    compProxy.pullSignal = sandbox.computer.pullSignal
-    compProxy.pushSignal = sandbox.computer.pushSignal
-    return compProxy
-  elseif address == modem.address then
+    compProxy.pullSignal = computer.pullSignal
+    compProxy.pushSignal = computer.pushSignal
+  elseif address == modem.address then    --modem handling
     function compProxy.close(port)
       if port == settings.port then
         error("Illegal call: Cannot close controller port!")
@@ -92,12 +133,14 @@ function sandbox.component.proxy(address)
       end
     end
   end
+
+  return compProxy
 end
 
-_invoke = component.invoke
+
 --[[ table for overriding computer component methods
 The metatable serves to run an actual invoke for any command that is not
-overriden. The overrides themvselves strip the invoke variables and call
+overriden. The overrides themselves strip the invoke variables and call
 the appropriate override functions with the remaining arguments.
 ]]
 _computerOverrides = setmetatable(
@@ -106,10 +149,10 @@ _computerOverrides = setmetatable(
       error("Illegal invocation: computer.shutdown")
     end,
     pullSignal = function(_, _, ...)
-      sandbox.computer.pullSignal(...)
+      computer.pullSignal(...)
     end,
     pushSignal = function(_, _, ...)
-      sandbox.computer.pushSignal(...)
+      computer.pushSignal(...)
     end
   },
   {
@@ -120,24 +163,29 @@ _computerOverrides = setmetatable(
     end
   }
 )
-function sandbox.component.invoke(address, method, ...)
+
+function component.invoke(address, method, ...)
+  checkArg(1, address, "string")
+  checkArg(2, method, "string")
   args = {...}
   if address == eeprom.address then
     --prevent eeprom from being invoked
     error("Illegal device invocation: EEPROM")
   elseif address == computer.address then
-    _computerOverrides[method](address, method, table.unpack(args))
+    return _computerOverrides[method](address, method, table.unpack(args))
   elseif address == modem.address --primary modem is being called
     and method == close
     and args[1] == settings.port --attempting to close controller port
   then
     error("Illegal invocation: Cannot close controller port!")
   else
-    _invoke(address, method, table.unpack(args))
+    return _invoke(address, method, table.unpack(args))
   end
 end
 
---set up basic commands for the controller
+--------------------------------------------------------------------------------
+--[[4. Controller commands]]
+--------------------------------------------------------------------------------
 
 --sending message back to controller
 function _send(...)
@@ -179,6 +227,10 @@ function commands.sandboxAdd(fileName)
   commands.sandBoxed[fileName] = load(root.data[fileName], fileName, "t", sandbox)
   root.data[fileName] = nil
 end
+
+--------------------------------------------------------------------------------
+--[[5. Running Loop]]
+--------------------------------------------------------------------------------
 
 while true do
   computer.pullSignal(math.huge)

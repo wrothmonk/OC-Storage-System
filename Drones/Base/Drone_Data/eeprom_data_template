@@ -1,8 +1,7 @@
 {
   --address of modem that can issue commands
   address = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX",
-  port = 4011,
-  password = "password", --Never leave this unchanged!!!
+  port = 4011, --port to send/receive messages from controller
   range = 5, --maximum range accepting messages that will be run
   name = "Unsecure Drone" --internal name for identifying the drone
 }
